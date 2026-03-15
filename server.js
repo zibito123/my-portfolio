@@ -50,7 +50,7 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// 4. CATCH-ALL ROUTE (Serves index.html for any refresh/random URL)
+// 4. CATCH-ALL ROUTE
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -58,5 +58,5 @@ app.get('*', (req, res) => {
 // 5. START SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server active at http://localhost:${PORT}`);
+    console.log(`🚀 Server active at port ${PORT}`);
 });
