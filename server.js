@@ -52,20 +52,17 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // 4. CATCH-ALL ROUTE
-app.get('*', (req, res) => {
+// Using '/*' instead of '*' to satisfy the new Path-to-RegExp requirements
+app.get('/*', (req, res) => {
     const rootIndex = path.join(__dirname, 'index.html');
     const publicIndex = path.join(__dirname, 'public', 'index.html');
 
-    // Check if index.html is in the root
     if (require('fs').existsSync(rootIndex)) {
         res.sendFile(rootIndex);
-    }
-    // If not, check the public folder
-    else if (require('fs').existsSync(publicIndex)) {
+    } else if (require('fs').existsSync(publicIndex)) {
         res.sendFile(publicIndex);
-    }
-    else {
-        res.status(404).send('index.html not found in root or public folder');
+    } else {
+        res.status(404).send('index.html not found');
     }
 });
 
