@@ -52,8 +52,13 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // 4. CATCH-ALL ROUTE
-// Using '/*' instead of '*' to satisfy the new Path-to-RegExp requirements
-app.get('/*', (req, res) => {
+// Using a Regular Expression (/(.*)/) to catch everything safely
+app.get(/(.*)/, (req, res) => {
+    // If the request is for an API route that doesn't exist, don't send HTML
+    if (req.url.startsWith('/api')) {
+        return res.status(404).send('API route not found');
+    }
+
     const rootIndex = path.join(__dirname, 'index.html');
     const publicIndex = path.join(__dirname, 'public', 'index.html');
 
@@ -62,7 +67,7 @@ app.get('/*', (req, res) => {
     } else if (require('fs').existsSync(publicIndex)) {
         res.sendFile(publicIndex);
     } else {
-        res.status(404).send('index.html not found');
+        res.status(404).send('index.html not found. Check your file structure on GitHub!');
     }
 });
 
