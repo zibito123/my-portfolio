@@ -4,15 +4,14 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const app = express();
 
-// 1. MIDDLEWARE (Must come first)
+// 1. MIDDLEWARE
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 2. STATIC FILES (Tell Express to look inside 'public' for CSS/JS/Images)
-// This must come BEFORE your routes
-app.use(express.static(path.join(__dirname, 'public')));
+// 2. STATIC FILES (Serving from the root folder)
+app.use(express.static(path.join(__dirname)));
 
-// 3. THE CONTACT ROUTE (The "Post Office")
+// 3. THE CONTACT ROUTE
 app.post('/api/contact', async (req, res) => {
     const { name, email, message } = req.body;
 
@@ -20,26 +19,30 @@ app.post('/api/contact', async (req, res) => {
         return res.status(400).send('Missing form data');
     }
 
+    // UPDATED TRANSPORTER: Better for Render/Cloud environments
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
-        secure: true, // Use SSL
+        secure: true, // Use SSL for port 465
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
-        }
+        },
+        // Adding a timeout setting to prevent long hanging requests
+        connectionTimeout: 10000
     });
 
     const mailOptions = {
-        from: email,
+        from: process.env.EMAIL_USER, // Gmail requires 'from' to be the authenticated user
         to: process.env.EMAIL_USER,
+        replyTo: email, // This allows you to click 'Reply' to the sender's email
         subject: `New Portfolio Message from ${name}`,
         text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`✅ Email sent from ${name}`);
+        console.log(`✅ Email sent successfully from ${name}`);
         res.status(200).send('Success');
     } catch (error) {
         console.error('❌ Email error:', error.message);
@@ -47,12 +50,9 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// 4. CATCH-ALL ROUTE (Must come LAST)
-// This serves your index.html for any other request
-app.get('/{*splat}', (req, res) => {
-    const indexPath = path.join(__dirname, 'public', 'index.html');
-    console.log("📂 Serving file from:", indexPath);
-    res.sendFile(indexPath);
+// 4. CATCH-ALL ROUTE (Serves index.html for any refresh/random URL)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // 5. START SERVER
