@@ -134,86 +134,70 @@ function toggleDarkTheme() {
 /* ===============================
     INTERACTIVITY (Hire & Contact)
 ================================= */
-
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("DOM fully loaded and parsed. Buttons are ready!");
+  console.log("🚀 Buttons are ready!");
 
+  // 1. HIRE ME BUTTON TRIGGER
+  const hireBtn = document.getElementById("hireBtn");
+  if (hireBtn) {
+    hireBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: "System Notification",
+            email: "Portfolio-Visitor",
+            message: "Someone clicked the 'Hire Me' button!"
+          })
+        });
+
+        if (response.ok) {
+          alert("✅ Success! Salim has been notified.");
+        }
+      } catch (error) {
+        console.error("Connection Error:", error);
+        alert("📡 Connection Error: Is the server running?");
+      }
+    });
+  }
+
+  // 2. CONTACT FORM TRIGGER
   const submitBtn = document.getElementById("submitContact");
   if (submitBtn) {
     submitBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      console.log("Send button clicked!"); // This will show in the F12 console
 
-      // ... the rest of your fetch code ...
+      const name = document.getElementById("senderName").value;
+      const email = document.getElementById("senderEmail").value;
+      const message = document.getElementById("senderMessage").value;
+
+      if (!name || !email || !message) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      try {
+        // Use the relative path '/api/contact' for Render deployment
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, message })
+        });
+
+        if (response.ok) {
+          alert("✅ Message Sent! I will get back to you shortly.");
+          document.getElementById("senderName").value = "";
+          document.getElementById("senderEmail").value = "";
+          document.getElementById("senderMessage").value = "";
+        } else {
+          alert("❌ Server Error: Message failed to send.");
+        }
+      } catch (error) {
+        console.error("Connection Error:", error);
+        alert("📡 Connection Error: The server is not responding.");
+      }
     });
   }
 });
-
-// 1. HIRE ME BUTTON TRIGGER
-const hireBtn = document.getElementById("hireBtn");
-if (hireBtn) {
-  hireBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-
-    // This triggers the notification for "Hire Me"
-    try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: "System Notification",
-          email: "Portfolio-Visitor",
-          message: "Someone clicked the 'Hire Me' button on your portfolio!"
-        })
-      });
-
-      if (response.ok) {
-        alert("✅ Success! Salim has been notified that you want to hire him.");
-      }
-    } catch (error) {
-      console.error("Connection Error:", error);
-      alert("📡 Connection Error: Is the server running?");
-    }
-  });
-}
-
-// 2. CONTACT FORM TRIGGER
-const submitBtn = document.getElementById("submitContact");
-if (submitBtn) {
-  submitBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-
-    // Get values from the HTML inputs
-    const name = document.getElementById("senderName").value;
-    const email = document.getElementById("senderEmail").value;
-    const message = document.getElementById("senderMessage").value;
-
-    // Simple validation
-    if (!name || !email || !message) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    try {
-      // Send the data to your server
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message })
-      });
-
-      if (response.ok) {
-        alert("✅ Message Sent! I will get back to you shortly.");
-        // Clear the form fields
-        document.getElementById("senderName").value = "";
-        document.getElementById("senderEmail").value = "";
-        document.getElementById("senderMessage").value = "";
-      } else {
-        alert("❌ Server Error: Message failed to send.");
-      }
-    } catch (error) {
-      console.error("Connection Error:", error);
-      alert("📡 Connection Error: The server is not responding.");
-    }
-  });
-}
