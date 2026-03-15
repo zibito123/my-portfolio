@@ -1,0 +1,99 @@
+const express = require('express');
+const mysql = require('mysql2');
+const nodemailer = require('nodemailer');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Point the static bridge to the 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// FIXED: This now looks in the CURRENT folder for your HTML/CSS/JS
+app.use(express.static(__dirname));
+
+// --- 2. MySQL Connection (The "Ledger") ---
+const db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME
+});
+
+db.connect((err) => {
+    if (err) {
+        console.error('❌ MySQL Connection Failed: ' + err.message);
+        return;
+    }
+    console.log('✅ Connected to Salim\'s MySQL Ledger.');
+});
+
+// --- 3. Email Transport (The "Postman") ---
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+// --- 4. ROUTES ---
+
+// Tell the server to look INSIDE the public folder for index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Route for the "Hire Me" Button
+app.post('/api/hire-me', (req, res) => {
+    const sql = "INSERT INTO hire_notifications (status) VALUES ('Interested')";
+
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error("DB Error:", err);
+            return res.status(500).json({ error: "Database failed" });
+        }
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: process.env.EMAIL_USER,
+            subject: '💼 New Hire Interest!',
+            text: 'Salim, someone just clicked the "Hire Me" button on your portfolio!'
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error("Email Error:", error);
+                return res.status(500).json({ error: "Email failed" });
+            }
+            res.status(200).json({ message: "Notification recorded & Email sent!" });
+        });
+    });
+});
+
+// --- 5. Start the Engine ---
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Salim's Portfolio Engine running at http://localhost:${PORT}`);
+    console.log(`📂 Serving files from: ${__dirname}`);
+});
+// --- New Route: Contact Form ---
+app.post('/api/contact', (req, res) => {
+    const { name, email, message } = req.body;
+
+    const query = 'INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)';
+
+    db.query(query, [name, email, message], (err, result) => {
+        if (err) {
+            console.error("❌ MySQL Error:", err);
+            return res.status(500).json({ error: "Failed to save message" });
+        }
+
+        console.log(`📩 New message from ${name} recorded!`);
+        res.status(200).json({ message: "Message received successfully!" });
+    });
+});
