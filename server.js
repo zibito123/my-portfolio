@@ -51,7 +51,8 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // 4. CATCH-ALL ROUTE
-app.get('*', (req, res) => {
+// This will serve index.html for any route that doesn't match /api/contact
+app.get(/^(?!\/api).+/, (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
