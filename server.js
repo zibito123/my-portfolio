@@ -8,9 +8,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 2. STATIC FILES (Serving from the root folder)
+/// 2. STATIC FILES
+// This tells Express to look for files in the root AND in a 'public' folder
 app.use(express.static(path.join(__dirname)));
-
+app.use(express.static(path.join(__dirname, 'public')));
 // 3. THE CONTACT ROUTE
 app.post('/api/contact', async (req, res) => {
     const { name, email, message } = req.body;
@@ -51,9 +52,21 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // 4. CATCH-ALL ROUTE
-// This will serve index.html for any route that doesn't match /api/contact
-app.get(/^(?!\/api).+/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+app.get('*', (req, res) => {
+    const rootIndex = path.join(__dirname, 'index.html');
+    const publicIndex = path.join(__dirname, 'public', 'index.html');
+
+    // Check if index.html is in the root
+    if (require('fs').existsSync(rootIndex)) {
+        res.sendFile(rootIndex);
+    }
+    // If not, check the public folder
+    else if (require('fs').existsSync(publicIndex)) {
+        res.sendFile(publicIndex);
+    }
+    else {
+        res.status(404).send('index.html not found in root or public folder');
+    }
 });
 
 // 5. START SERVER
