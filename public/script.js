@@ -142,6 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (hireBtn) {
     hireBtn.addEventListener('click', async (e) => {
       e.preventDefault();
+
+      // Start Loading State
+      const originalText = hireBtn.innerText;
+      hireBtn.innerText = "Sending...";
+      hireBtn.disabled = true;
+      hireBtn.style.opacity = "0.7";
+
       try {
         const response = await fetch('/api/contact', {
           method: 'POST',
@@ -155,10 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (response.ok) {
           alert("✅ Success! Salim has been notified.");
+        } else {
+          alert("❌ Notification failed to send.");
         }
       } catch (error) {
         console.error("Connection Error:", error);
         alert("📡 Connection Error: Is the server running?");
+      } finally {
+        // End Loading State
+        hireBtn.innerText = originalText;
+        hireBtn.disabled = false;
+        hireBtn.style.opacity = "1";
       }
     });
   }
@@ -169,34 +183,48 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.addEventListener('click', async (e) => {
       e.preventDefault();
 
-      const name = document.getElementById("senderName").value;
-      const email = document.getElementById("senderEmail").value;
-      const message = document.getElementById("senderMessage").value;
+      const nameInput = document.getElementById("senderName");
+      const emailInput = document.getElementById("senderEmail");
+      const messageInput = document.getElementById("senderMessage");
 
-      if (!name || !email || !message) {
+      if (!nameInput.value || !emailInput.value || !messageInput.value) {
         alert("Please fill in all fields.");
         return;
       }
 
+      // Start Loading State
+      const originalText = submitBtn.innerText;
+      submitBtn.innerText = "Sending...";
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.7";
+
       try {
-        // Use the relative path '/api/contact' for Render deployment
         const response = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, message })
+          body: JSON.stringify({
+            name: nameInput.value,
+            email: emailInput.value,
+            message: messageInput.value
+          })
         });
 
         if (response.ok) {
           alert("✅ Message Sent! I will get back to you shortly.");
-          document.getElementById("senderName").value = "";
-          document.getElementById("senderEmail").value = "";
-          document.getElementById("senderMessage").value = "";
+          nameInput.value = "";
+          emailInput.value = "";
+          messageInput.value = "";
         } else {
           alert("❌ Server Error: Message failed to send.");
         }
       } catch (error) {
         console.error("Connection Error:", error);
         alert("📡 Connection Error: The server is not responding.");
+      } finally {
+        // End Loading State
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = "1";
       }
     });
   }
