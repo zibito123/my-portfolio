@@ -1,3 +1,5 @@
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first'); // Fixes the ENETUNREACH error
 require('dotenv').config();
 const express = require('express');
 const nodemailer = require('nodemailer');
@@ -8,35 +10,36 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/// 2. STATIC FILES
-// This tells Express to look for files in the root AND in a 'public' folder
+// 2. STATIC FILES
 app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, 'public')));
+
 // 3. THE CONTACT ROUTE
 app.post('/api/contact', async (req, res) => {
     const { name, email, message } = req.body;
 
+    // Check if fields are missing
     if (!name || !email || !message) {
         return res.status(400).send('Missing form data');
     }
 
-    // UPDATED TRANSPORTER: Better for Render/Cloud environments
+    // Configure the Transporter
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
-        secure: true, // Use SSL for port 465
+        secure: true,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
         },
-        // Adding a timeout setting to prevent long hanging requests
+        tls: { rejectUnauthorized: false },
         connectionTimeout: 10000
     });
 
     const mailOptions = {
-        from: process.env.EMAIL_USER, // Gmail requires 'from' to be the authenticated user
+        from: process.env.EMAIL_USER,
         to: process.env.EMAIL_USER,
-        replyTo: email, // This allows you to click 'Reply' to the sender's email
+        replyTo: email,
         subject: `New Portfolio Message from ${name}`,
         text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
     };
@@ -49,12 +52,10 @@ app.post('/api/contact', async (req, res) => {
         console.error('❌ Email error:', error.message);
         res.status(500).send('Failed to send email.');
     }
-});
+}); // <--- This bracket closes the app.post function correctly
 
 // 4. CATCH-ALL ROUTE
-// Using a Regular Expression (/(.*)/) to catch everything safely
 app.get(/(.*)/, (req, res) => {
-    // If the request is for an API route that doesn't exist, don't send HTML
     if (req.url.startsWith('/api')) {
         return res.status(404).send('API route not found');
     }
@@ -67,7 +68,7 @@ app.get(/(.*)/, (req, res) => {
     } else if (require('fs').existsSync(publicIndex)) {
         res.sendFile(publicIndex);
     } else {
-        res.status(404).send('index.html not found. Check your file structure on GitHub!');
+        res.status(404).send('index.html not found.');
     }
 });
 
