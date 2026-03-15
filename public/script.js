@@ -87,8 +87,8 @@ if (typeof ScrollReveal !== "undefined") {
     duration: 2000,
     reset: true,
   });
-  srRight.reveal(".skills-box", { delay: 100 });
-  srRight.reveal(".form-control", { delay: 100 });
+  srRight.reveal(".skills-box", { delay: 50 });
+  srRight.reveal(".form-control", { delay: 50 });
 }
 
 /* ===============================
